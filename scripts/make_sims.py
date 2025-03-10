@@ -11,7 +11,7 @@ from cosmology import Cosmology
 
 #Config
 n = 100
-path = "../LogNormal_sims"
+path = "../lognormal_sims"
 mode = "lognormal"
 nside = 256
 lmax = nside
@@ -135,6 +135,8 @@ for i in range(1, n+1):
         ngal = np.sum(POS1)
         nbar = (ngal * wmean) / fsky / npix
         heracles.update_metadata(POS1,
+                                nside=nside,
+                                lmax=lmax,
                                 ngal=ngal,
                                 nbar=nbar,
                                 wmean=wmean,
@@ -148,6 +150,8 @@ for i in range(1, n+1):
         ngal = np.sum(SHE1)
         nbar = (ngal * wmean) / fsky / npix
         heracles.update_metadata(SHE1,
+                                nside=nside,
+                                lmax=lmax,
                                 ngal=ngal,
                                 nbar=nbar,
                                 wmean=wmean,
@@ -161,6 +165,8 @@ for i in range(1, n+1):
         ngal = np.sum(POS2)
         nbar = (ngal * wmean) / fsky / npix
         heracles.update_metadata(POS2,
+                                nside=nside,
+                                lmax=lmax,
                                 ngal=ngal,
                                 nbar=nbar,
                                 wmean=wmean,
@@ -174,6 +180,8 @@ for i in range(1, n+1):
         ngal = np.sum(SHE2)
         nbar = (ngal * wmean) / fsky / npix
         heracles.update_metadata(SHE2,
+                                nside=nside,
+                                lmax=lmax,
                                 ngal=ngal,
                                 nbar=nbar,
                                 wmean=wmean,

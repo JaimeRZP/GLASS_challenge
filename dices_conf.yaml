@@ -2,8 +2,8 @@
 Nside: 256
 Njk: 50
 Output: 
-  save: False
-  path: ./tests/
+  save: True
+  path: ./dices/
 
 Fields:
   Nbins: 2
@@ -27,5 +27,5 @@ bins:
 DICES:
   bin: False
   mask_correction: True
-  shrinkage: True
+  shrinkage: False
   delete2_correction: True
