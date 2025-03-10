@@ -9,5 +9,8 @@ The goal of this challenge is to compare and validate the output of the Jackknif
 - Gaussian + Mask
 ![image](https://github.com/user-attachments/assets/f56414a4-326b-4cdc-9654-3599a79f1f3b)
 - LogNormal + Mask
+![image](https://github.com/user-attachments/assets/4b6736a7-870d-4447-b456-c56e73163e73)
+
+
 
 
