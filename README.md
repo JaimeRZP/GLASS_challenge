@@ -3,7 +3,7 @@ The goal of this challenge is to compare and validate the output of the Jackknif
 
 ### Current best
 - Gaussian
-![image](https://github.com/user-attachments/assets/73e57a48-b6c1-4189-b8a4-aee992632da9)
+![image](https://github.com/user-attachments/assets/0d3fdfe5-8366-4ac3-b555-38a0574b31bb)
 - LogNormal
 ![image](https://github.com/user-attachments/assets/87c69daf-f623-485e-b5c9-8c80c0d60ba2)
 - Gaussian + Mask
