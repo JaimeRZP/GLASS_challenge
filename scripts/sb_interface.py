@@ -36,6 +36,7 @@ with open('../config_spaceborne_in.yaml') as f:
 cfg['nz']['ngal_sources'] = [10.0, 10.0]  # gal/arcmin^2/zbin
 cfg['nz']['ngal_lenses'] = [10.0, 10.0]  # gal/arcmin^2/zbin
 cfg['covariance']['sigma_eps_i'] = 0.0
+cfg['covariance']['noiseless_spectra'] = True
 # ===== END SETTINGS ========
 
 cfg['nz']['dzGC'] = [0.0] * Nbins
