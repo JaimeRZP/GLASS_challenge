@@ -17,9 +17,9 @@ def write_cl_tab(ascii_folder, ascii_filename, cl_3d, ells, zbins):
 
 
 # ===== SETTINGS ========
-path_to_sb_main = '/home/davide/Documenti/Lavoro/Programmi/Spaceborne/main.py'
+path_to_sb_main = '/home/jaimerzp/Documents/Euclid_pipeline/Spaceborne/main.py'
 path_to_sb_cfg = (
-    '/home/davide/Documenti/Lavoro/Programmi/GLASS_cov_challenge/'
+    '/home/jaimerzp/Documents/UCL/GLASS_cov_challenge/'
     'config_spaceborne_out.yaml'
 )
 data_sb_path = '../data/data_sb'
