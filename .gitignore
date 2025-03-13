@@ -1,2 +1,3 @@
 gaussian_sims/*
-data/data_sb
+data/data_sb/cov*
+data/sb_cov_dict.npz
