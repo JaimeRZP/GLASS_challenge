@@ -1,4 +1,6 @@
 # Euclid Covariance Challenge
+![Screenshot From 2025-03-14 09-53-37](https://github.com/user-attachments/assets/a0743ad8-20b0-412c-a36e-850eae7c9c62)
+
 The goal of this challenge is to compare and validate the output of the Jackknife and analytical covariance codes against Gaussian and LogNormal simulations generated using GLASS.
 
 ### Current best
