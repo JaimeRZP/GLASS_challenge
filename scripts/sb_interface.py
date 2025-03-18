@@ -18,6 +18,13 @@ def write_cl_tab(ascii_folder, ascii_filename, cl_3d, ells, zbins):
                     file.write(f'{ell_val:.3f}\t\t{zi}\t{zj}\t{value:.10e}\n')
 
 
+# check different verisons of the cov dictionaries
+# cov_inputcls = np.load('../data/sb_cov_dict_inputClsTrue.npz', allow_pickle=True)['arr_0'].item()
+# cov_noinputcls = np.load('../data/sb_cov_dict_inputClsFalse.npz', allow_pickle=True)['arr_0'].item()
+
+# for key in cov_inputcls.keys():
+#     np.testing.assert_allclose(cov_inputcls[key], cov_noinputcls[key])
+    
 # ===== SETTINGS ========
 ROOT = '/home/davide/Documenti/Lavoro/Programmi'
 path_to_sb_main = f'{ROOT}/Spaceborne/main.py'
@@ -53,7 +60,7 @@ cfg['ell_binning']['ell_max_WL_opt'] = int(ls.max())
 cfg['ell_binning']['nbl_WL_opt'] = int(len(ls))
 cfg['ell_binning']['binning_type'] = 'unbinned'
 
-# cells
+# C_ells
 cfg['C_ell']['cl_LL_path'] = f'{data_sb_path}/cl_ll_tab.txt'
 cfg['C_ell']['cl_GL_path'] = f'{data_sb_path}/cl_gl_tab.txt'
 cfg['C_ell']['cl_GG_path'] = f'{data_sb_path}/cl_gg_tab.txt'
@@ -63,6 +70,7 @@ cfg['C_ell']['mult_shear_bias'] = [0] * Nbins
 cfg['C_ell']['has_RSD'] = False
 cfg['C_ell']['has_IA'] = False
 cfg['C_ell']['has_magnification_bias'] = False
+cfg['C_ell']['use_input_cls'] = True
 
 
 # n(z) - THIS IS USED ONLY FOR THE NON-GAUSSIAN COVARIANCE
@@ -89,7 +97,6 @@ gal_bias = np.concatenate((z_nz[:, None], gal_bias.T), axis=1)
 np.savetxt(f'{data_sb_path}/gal_bias.txt', gal_bias)
 cfg['C_ell']['gal_bias_table_filename'] = f'{data_sb_path}/gal_bias.txt'
 cfg['C_ell']['which_gal_bias'] = 'from_input'
-
 
 cfg['covariance']['split_gaussian_cov'] = False
 cfg['covariance']['SSC'] = False
