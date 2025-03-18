@@ -44,13 +44,13 @@ cfg['nz']['dzWL'] = [0.0] * Nbins
 cfg['misc']['output_path'] = data_sb_path
 
 # ell binning
-cfg['ell_binning']['ell_min'] = int(ls.min())
+cfg['ell_binning']['ell_min'] = 10 #int(ls.min())
 cfg['ell_binning']['ell_max_3x2pt'] = int(ls.max())
 cfg['ell_binning']['ell_max_GC'] = int(ls.max())
 cfg['ell_binning']['ell_max_WL'] = int(ls.max())
 cfg['ell_binning']['ell_max_WL_opt'] = int(ls.max())
-cfg['ell_binning']['nbl_WL_opt'] = int(len(ls))
-cfg['ell_binning']['binning_type'] = 'unbinned'
+cfg['ell_binning']['nbl_WL_opt'] = 10 #int(len(ls))
+cfg['ell_binning']['binning_type'] = 'log'
 
 # cells
 cfg['C_ell']['cl_LL_path'] = f'{data_sb_path}/cl_ll_tab.txt'
