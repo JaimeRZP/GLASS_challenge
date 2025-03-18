@@ -5,6 +5,8 @@ import numpy as np
 import yaml
 from matplotlib import pyplot as plt
 
+%cd /home/davide/Documenti/Lavoro/Programmi/GLASS_cov_challenge/scripts
+
 
 def write_cl_tab(ascii_folder, ascii_filename, cl_3d, ells, zbins):
     with open(f'{ascii_folder}/{ascii_filename}', 'w') as file:
@@ -17,11 +19,9 @@ def write_cl_tab(ascii_folder, ascii_filename, cl_3d, ells, zbins):
 
 
 # ===== SETTINGS ========
-path_to_sb_main = '/home/davide/Documenti/Lavoro/Programmi/Spaceborne/main.py'
-path_to_sb_cfg = (
-    '/home/davide/Documenti/Lavoro/Programmi/GLASS_cov_challenge/'
-    'config_spaceborne_out.yaml'
-)
+ROOT = '/home/davide/Documenti/Lavoro/Programmi'
+path_to_sb_main = f'{ROOT}/Spaceborne/main.py'
+path_to_sb_cfg = f'{ROOT}/GLASS_cov_challenge/config_spaceborne_out.yaml'
 data_sb_path = '../data/data_sb'
 nz_path = '../data'
 
