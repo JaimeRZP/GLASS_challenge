@@ -11,13 +11,14 @@ C_ell:
   cl_GG_path: ../data/data_sb/cl_gg_tab.txt
   cl_GL_path: ../data/data_sb/cl_gl_tab.txt
   cl_LL_path: ../data/data_sb/cl_ll_tab.txt
-  gal_bias_table_filename: ./input/gal_bias_3bins.txt
+  gal_bias_table_filename: ../data/data_sb/gal_bias.txt
   galaxy_bias_fit_coeff:
   - 1.33291
   - -0.72414
   - 1.0183
   - -0.14913
   has_IA: false
+  has_RSD: false
   has_magnification_bias: false
   has_rsd: false
   mag_bias_table_filedname: ./input/mag_bias.txt
@@ -30,7 +31,7 @@ C_ell:
   - 0
   - 0
   use_input_cls: true
-  which_gal_bias: FS2_polynomial_fit
+  which_gal_bias: from_input
   which_mag_bias: FS2_polynomial_fit
 OneCovariance:
   consistency_checks: false
@@ -93,7 +94,7 @@ covariance:
   which_sigma2_b: polar_cap_on_the_fly
   z_max: 3.0
   z_min: 0.02
-  z_steps: 300
+  z_steps: 1000
   z_steps_trisp: 50
 ell_binning:
   binning_type: unbinned
@@ -174,4 +175,4 @@ nz:
   nz_lenses_filename: ../data/data_sb/nz_pos_fmt.txt
   nz_sources_filename: ../data/data_sb/nz_she_fmt.txt
   plot_nz_tocheck: true
-  shift_nz: true
+  shift_nz: false

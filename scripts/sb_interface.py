@@ -41,6 +41,7 @@ cfg['covariance']['noiseless_spectra'] = True
 
 cfg['nz']['dzGC'] = [0.0] * Nbins
 cfg['nz']['dzWL'] = [0.0] * Nbins
+cfg['nz']['shift_nz'] = False
 cfg['misc']['output_path'] = data_sb_path
 
 # ell binning
@@ -59,6 +60,10 @@ cfg['C_ell']['cl_GG_path'] = f'{data_sb_path}/cl_gg_tab.txt'
 cfg['C_ell']['mult_shear_bias'] = [0] * Nbins
 cfg['C_ell']['mult_shear_bias'] = [0] * Nbins
 cfg['C_ell']['mult_shear_bias'] = [0] * Nbins
+cfg['C_ell']['has_RSD'] = False
+cfg['C_ell']['has_IA'] = False
+cfg['C_ell']['has_magnification_bias'] = False
+
 
 # n(z) - THIS IS USED ONLY FOR THE NON-GAUSSIAN COVARIANCE
 z_nz = np.load(f'{nz_path}/nzs.npz')['z']
@@ -77,6 +82,14 @@ np.savetxt(f'{data_sb_path}/nz_pos_fmt.txt', nz_pos_fmt)
 np.savetxt(f'{data_sb_path}/nz_she_fmt.txt', nz_she_fmt)
 cfg['nz']['nz_lenses_filename'] = f'{data_sb_path}/nz_pos_fmt.txt'
 cfg['nz']['nz_sources_filename'] = f'{data_sb_path}/nz_she_fmt.txt'
+
+# galaxy bias
+gal_bias = np.ones_like(nz_pos)
+gal_bias = np.concatenate((z_nz[:, None], gal_bias.T), axis=1)
+np.savetxt(f'{data_sb_path}/gal_bias.txt', gal_bias)
+cfg['C_ell']['gal_bias_table_filename'] = f'{data_sb_path}/gal_bias.txt'
+cfg['C_ell']['which_gal_bias'] = 'from_input'
+
 
 cfg['covariance']['split_gaussian_cov'] = False
 cfg['covariance']['SSC'] = False
