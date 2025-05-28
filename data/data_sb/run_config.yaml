@@ -1,8 +1,6 @@
 BNT:
   cl_BNT_transform: false
-  compute_bnt_with_shifted_nz_for_zcuts: false
   cov_BNT_transform: false
-  include_ia_in_bnt_kernel_for_zcuts: false
 C_ell:
   cl_CCL_kwargs:
     l_limber: -1
@@ -18,10 +16,9 @@ C_ell:
   - 1.0183
   - -0.14913
   has_IA: false
-  has_RSD: false
   has_magnification_bias: false
   has_rsd: false
-  mag_bias_table_filedname: ./input/mag_bias.txt
+  mag_bias_table_filename: ./input/mag_bias.txt
   magnification_bias_fit_coeff:
   - -1.50685
   - 1.35034
@@ -41,11 +38,12 @@ OneCovariance:
 PyCCL:
   cov_integration_method: spline
   gsl_params: null
-  load_cached_tkka: false
+  load_cached_tkka: true
   n_samples_wf: 1000
   spline_params:
     A_SPLINE_NA_PK: 240
     K_MAX_SPLINE: 300
+  use_default_k_a_grids: false
 cosmology:
   N_eff: 3.046
   ODE: 0.68
@@ -53,7 +51,6 @@ cosmology:
   Om: 0.32
   Om_k0: 0
   h: 0.6737
-  logT: 7.75
   m_nu: 0.06
   ns: 0.966
   s8: 0.816
@@ -70,12 +67,12 @@ covariance:
   covariance_ordering_2D: ell_probe_zpair
   include_b2g: true
   include_terasawa_terms: false
-  k_steps: 200
+  k_steps: 100
   load_cached_sigma2_b: false
   log10_k_max: 2
   log10_k_min: -5
   n_probes: 2
-  noiseless_spectra: true
+  no_sampling_noise: true
   probe_ordering:
   - - L
     - L
@@ -85,25 +82,29 @@ covariance:
     - G
   row_col_major: row-major
   save_full_cov: true
+  sigma2_b_integration_scheme: levin
   sigma_eps_i: 0.0
   split_gaussian_cov: false
   triu_tril: triu
   use_KE_approximation: true
   which_b1g_in_resp: from_input
   which_pk_responses: halo_model
-  which_sigma2_b: polar_cap_on_the_fly
+  which_sigma2_b: from_input_mask
   z_max: 3.0
   z_min: 0.02
-  z_steps: 1000
+  z_steps: 7000
   z_steps_trisp: 50
 ell_binning:
   binning_type: unbinned
-  ell_max_3x2pt: 256
+  ell_bins_GC: 29
+  ell_bins_WL: 29
+  ell_bins_ref: 32
   ell_max_GC: 256
   ell_max_WL: 256
-  ell_max_WL_opt: 256
-  ell_min: 0
-  nbl_WL_opt: 257
+  ell_max_ref: 5000
+  ell_min_GC: 0
+  ell_min_WL: 0
+  ell_min_ref: 10
 ell_cuts:
   apply_ell_cuts: false
   center_or_min: center
@@ -143,20 +144,32 @@ intrinsic_alignment:
   lumin_ratio_filename: null
   z_pivot_IA: 0
 mask:
-  fsky: 0.3210678603147902
-  mask_path: '.../mask.fits'
-  nside_mask: 1024
+  apodize: false
+  aposize: 0.1
+  generate_polar_cap: true
+  load_mask: false
+  mask_path: ../input/mask.fits
+  nside: 1024
   survey_area_deg2: 13245
 misc:
-  bench_filename: ../Spaceborne_bench/output_G{g_code:s}_SSC{ssc_code:s}_cNG{cng_code:s}_KE{use_KE:s}_resp{which_pk_responses:s}_b1g{which_b1g_in_resp:s}_moreoutputs_dict
+  bench_filename: ../Spaceborne_bench/output_G{g_code:s}_SSC{ssc_code:s}_cNG{cng_code:s}_KE{use_KE:s}_resp{which_pk_responses:s}_b1g{which_b1g_in_resp:s}_devmerge3
+  levin_batch_size: 1000
   num_threads: 40
   output_path: ../data/data_sb
   save_output_as_benchmark: false
-  test_cholesky_decomposition: true
-  test_condition_number: true
-  test_numpy_inversion: true
-  test_symmetry: true
+  test_cholesky_decomposition: false
+  test_condition_number: false
+  test_numpy_inversion: false
+  test_symmetry: false
+namaster:
+  coupled_cov: false
+  spin0: false
+  use_INKA: true
+  use_namaster: false
+  workspace_path: '...'
 nz:
+  clip_zmax: 3
+  clip_zmin: 0
   dzGC:
   - 0.0
   - 0.0
@@ -170,9 +183,16 @@ nz:
   - 10.0
   - 10.0
   normalize_shifted_nz: true
-  nz_gaussian_smoothing: false
-  nz_gaussian_smoothing_sigma: 2
   nz_lenses_filename: ../data/data_sb/nz_pos_fmt.txt
   nz_sources_filename: ../data/data_sb/nz_she_fmt.txt
-  plot_nz_tocheck: true
   shift_nz: false
+probe_selection:
+  GG: true
+  GL: true
+  LL: true
+  cross_cov: true
+sample_covariance:
+  compute_sample_cov: false
+  fix_seed: true
+  nreal: 5000
+  which_cls: namaster
