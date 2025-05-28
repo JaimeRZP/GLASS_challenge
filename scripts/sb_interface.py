@@ -1,11 +1,16 @@
 import subprocess
+import sys
 
 import heracles
 import numpy as np
 import yaml
 from matplotlib import pyplot as plt
 
-%cd /home/davide/Documenti/Lavoro/Programmi/GLASS_cov_challenge/scripts
+sys.path.append('/home/davide/Documenti/Lavoro/Programmi/Spaceborne/spaceborne')
+import sb_lib as sl
+
+# %cd /home/davide/Documenti/Lavoro/Programmi/GLASS_cov_challenge/scripts
+# the env to use is spaceborne-dav
 
 
 def write_cl_tab(ascii_folder, ascii_filename, cl_3d, ells, zbins):
@@ -24,7 +29,7 @@ def write_cl_tab(ascii_folder, ascii_filename, cl_3d, ells, zbins):
 
 # for key in cov_inputcls.keys():
 #     np.testing.assert_allclose(cov_inputcls[key], cov_noinputcls[key])
-    
+
 # ===== SETTINGS ========
 ROOT = '/home/davide/Documenti/Lavoro/Programmi'
 path_to_sb_main = f'{ROOT}/Spaceborne/main.py'
@@ -43,7 +48,7 @@ with open('../config_spaceborne_in.yaml') as f:
 cfg['nz']['ngal_sources'] = [10.0, 10.0]  # gal/arcmin^2/zbin
 cfg['nz']['ngal_lenses'] = [10.0, 10.0]  # gal/arcmin^2/zbin
 cfg['covariance']['sigma_eps_i'] = 0.0
-cfg['covariance']['noiseless_spectra'] = True
+cfg['covariance']['no_sampling_noise'] = True
 # ===== END SETTINGS ========
 
 cfg['nz']['dzGC'] = [0.0] * Nbins
@@ -52,25 +57,30 @@ cfg['nz']['shift_nz'] = False
 cfg['misc']['output_path'] = data_sb_path
 
 # ell binning
-cfg['ell_binning']['ell_min'] = int(ls.min())
-cfg['ell_binning']['ell_max_3x2pt'] = int(ls.max())
-cfg['ell_binning']['ell_max_GC'] = int(ls.max())
+cfg['ell_binning']['ell_min_WL'] = int(ls.min())
 cfg['ell_binning']['ell_max_WL'] = int(ls.max())
-cfg['ell_binning']['ell_max_WL_opt'] = int(ls.max())
-cfg['ell_binning']['nbl_WL_opt'] = int(len(ls))
+cfg['ell_binning']['ell_min_GC'] = int(ls.min())
+cfg['ell_binning']['ell_max_GC'] = int(ls.max())
+# cfg['ell_binning']['ell_max_3x2pt'] = int(ls.max())
+# cfg['ell_binning']['ell_max_GC'] = int(ls.max())
+# cfg['ell_binning']['ell_max_ref'] = int(ls.max())
+# cfg['ell_binning']['nbl_ref'] = len(ls)
 cfg['ell_binning']['binning_type'] = 'unbinned'
 
 # C_ells
+cfg['C_ell']['use_input_cls'] = True
 cfg['C_ell']['cl_LL_path'] = f'{data_sb_path}/cl_ll_tab.txt'
 cfg['C_ell']['cl_GL_path'] = f'{data_sb_path}/cl_gl_tab.txt'
 cfg['C_ell']['cl_GG_path'] = f'{data_sb_path}/cl_gg_tab.txt'
 cfg['C_ell']['mult_shear_bias'] = [0] * Nbins
 cfg['C_ell']['mult_shear_bias'] = [0] * Nbins
 cfg['C_ell']['mult_shear_bias'] = [0] * Nbins
-cfg['C_ell']['has_RSD'] = False
+cfg['C_ell']['has_rsd'] = False
 cfg['C_ell']['has_IA'] = False
 cfg['C_ell']['has_magnification_bias'] = False
-cfg['C_ell']['use_input_cls'] = True
+# mask
+cfg['mask']['load_mask'] = False
+cfg['mask']['generate_polar_cap'] = True
 
 
 # n(z) - THIS IS USED ONLY FOR THE NON-GAUSSIAN COVARIANCE
@@ -161,31 +171,35 @@ cov_10d[1, 0, 1, 0] = np.load(f'{data_sb_path}/cov_GLGL_G_6D.npz')['arr_0']
 cov_10d[1, 0, 1, 1] = np.load(f'{data_sb_path}/cov_GLGG_G_6D.npz')['arr_0']
 cov_10d[1, 1, 1, 1] = np.load(f'{data_sb_path}/cov_GGGG_G_6D.npz')['arr_0']
 
-# reshape output to heracles format
-cov_dict = {}
-for probe_a_ix in range(n_probes):
-    for probe_b_ix in range(n_probes):
-        for probe_c_ix in range(n_probes):
-            for probe_d_ix in range(n_probes):
-                for zi in range(Nbins):
-                    for zj in range(Nbins):
-                        for zk in range(Nbins):
-                            for zl in range(Nbins):
-                                probe_a_str = probe_dict[probe_a_ix]
-                                probe_b_str = probe_dict[probe_b_ix]
-                                probe_c_str = probe_dict[probe_c_ix]
-                                probe_d_str = probe_dict[probe_d_ix]
+# reshape output to heracles format: v1
+# cov_dict = {}
+# for probe_a_ix in range(n_probes):
+#     for probe_b_ix in range(n_probes):
+#         for probe_c_ix in range(n_probes):
+#             for probe_d_ix in range(n_probes):
+#                 for zi in range(Nbins):
+#                     for zj in range(Nbins):
+#                         for zk in range(Nbins):
+#                             for zl in range(Nbins):
+#                                 probe_a_str = probe_dict[probe_a_ix]
+#                                 probe_b_str = probe_dict[probe_b_ix]
+#                                 probe_c_str = probe_dict[probe_c_ix]
+#                                 probe_d_str = probe_dict[probe_d_ix]
 
-                                # fmt: off
-                                cov_dict[
-                                    (probe_a_str, probe_b_str, 
-                                     probe_c_str, probe_d_str,
-                                     zi, zj, zk, zl)
-                                ] = cov_10d[
-                                    probe_a_ix, probe_b_ix, 
-                                    probe_c_ix, probe_d_ix,
-                                    :, :, zi, zj, zk, zl,
-                                ]
-                                # fmt: on
+#                                 # fmt: off
+#                                 cov_dict[
+#                                     (probe_a_str, probe_b_str, 
+#                                      probe_c_str, probe_d_str,
+#                                      zi, zj, zk, zl)
+#                                 ] = cov_10d[
+#                                     probe_a_ix, probe_b_ix, 
+#                                     probe_c_ix, probe_d_ix,
+#                                     :, :, zi, zj, zk, zl,
+#                                 ]
+#                                 # fmt: on
 
-np.savez_compressed('../data/sb_cov_dict.npz', cov_dict)
+
+# reshape output to heracles format: v2
+cov_hc_dict = sl.cov_sb_10d_to_heracles_dict(cov_10d, squeeze=True)
+
+np.savez('../data/sb_cov_dict.npz', cov_hc_dict, allow_pickle=True)
