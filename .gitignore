@@ -3,3 +3,4 @@ data/data_sb/cov*
 data/sb_cov_dict.npz
 data/data_sb/cache/*
 scripts/tmp*
+data/sb_cov_dict.npz
