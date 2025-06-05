@@ -10,11 +10,11 @@ import heracles
 from cosmology import Cosmology
 
 #Config
-n = 100
+n = 10
 path = "../lognormal_sims"
 mode = "lognormal"
-nside = 256
-lmax = nside
+nside = 1024
+lmax = 1500
 l = np.arange(0, lmax + 1)
 nbins = 4
 h = 0.7

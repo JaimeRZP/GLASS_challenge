@@ -1,18 +1,21 @@
 import os
-import math
 import numpy as np
-import matplotlib.pyplot as plt
-import yaml
 import healpy as hp
 import heracles
 import skysegmentor
 import heracles.dices as dices
 from heracles.io import read, write
+from itertools import combinations
+
+from heracles.healpy import HealpixMapper
+from heracles.fields import Positions, Shears, Visibility, Weights
+
 
 # Config
-nside = 256
-lmax = nside
-mode = "gaussian"
+nside = 1024
+lmax = 1500
+Njk = 10
+mode = "lognormal"  # "lognormal" or "gaussian"
 sims_path = f"../{mode}_sims/{mode}_sim_1/"
 apply_mask = False
 binned = False
@@ -51,7 +54,6 @@ vis_maps[("WHT", 2)] = vmap
 
 # JK maps
 jk_maps = {}
-Njk = 30
 if apply_mask:
     data_fname = f"../data/masked_jkmap_{Njk}.fits"
 else:
@@ -67,43 +69,56 @@ else:
 for key in list(vis_maps.keys()):
     jk_maps[key] = jkmap
 
+# Fields
+mapper = HealpixMapper(nside=nside, lmax=lmax)
+fields = {
+    "POS": Positions(mapper, mask="VIS"),
+    "SHE": Shears(mapper, mask="WHT"),
+    "VIS": Visibility(mapper),
+    "WHT": Weights(mapper),
+}
+
 # Cls0
-data_fname = output_path + "cls/cls_nojk.fits"
-mask_fname = output_path + "cls/mls_nojk.fits"
+data_fname = output_path + "cls/cls_data_0.fits"
+mask_fname = output_path + "cls/cls_mask_0.fits"
 if os.path.exists(data_fname) & os.path.exists(mask_fname):
     cls0 = read(data_fname)
     mls0 = read(mask_fname)
 else:
-    cls0 = dices.get_cls(data_maps, jk_maps)
-    mls0 = dices.get_cls(vis_maps, jk_maps)
+    # For the data
+    alms = heracles.transform(fields, data_maps)
+    cls0 = heracles.angular_power_spectra(alms)
+    # For the visibility
+    alms = heracles.transform(fields, vis_maps)
+    mls0 = heracles.angular_power_spectra(alms)
     if save:
         write(data_fname, cls0)
         write(mask_fname, mls0)
 
 # Cls1
 cls1 = {}
-for jk in range(1, Njk + 1):
-    data_fname = output_path + "cls/cls_njk_%i_jkid_%i.fits" % (
-        Njk,
-        jk,
-    )
+for regions in combinations(range(1, Njk + 1), 1):
+    (jk1,) = regions
+    data_fname = output_path + f"cls/cls_data_{jk1}.fits"
     if os.path.exists(data_fname):
-        cls1[(jk)] = read(data_fname)
+        _cls = read(data_fname)
     else:
-        # Compute Cls
-        _cls = dices.get_cls(data_maps, jk_maps, jk=jk)
-        _cls_mm = dices.get_cls(vis_maps, jk_maps, jk=jk)
+        _cls = dices.jackknife.get_cls(data_maps, jk_maps, fields, *regions)
+        _cls_mm = dices.jackknife.get_cls(vis_maps, jk_maps, fields, *regions)
         # Mask correction
-        _cls = dices.correct_mask(_cls, _cls_mm, mls0)
+        alphas = dices.mask_correction(_cls_mm, mls0)
+        _cls = heracles.unmixing._PolSpice(_cls, alphas)
         # Bias correction
-        _cls = dices.correct_bias(_cls, jk_maps, jk=jk)
-        cls1[jk] = _cls
-        # Save Cls
-        if save:
-            write(data_fname, _cls)
+        _cls = dices.correct_bias(_cls, jk_maps, fields, *regions)
+        # Save spectra
+        data_fname = output_path + f"cls/cls_data_{jk1}.fits"
+        write(data_fname, _cls)
+        data_fname = output_path + f"cls/cls_mask_{jk1}.fits"
+        write(data_fname, _cls_mm)
+    cls1[regions] = _cls
 
-# Delete1
-nlbins = 10
+# Binning
+nlbins = 15
 ls = np.arange(lmax + 1)
 ledges = np.logspace(np.log10(10), np.log10(lmax), nlbins + 1)
 lgrid = (ledges[1:] + ledges[:-1]) / 2
@@ -113,100 +128,56 @@ if binned:
     cls0 = heracles.binned(cls0, ledges)
     cls1 = heracles.binned(cls1, ledges)
 
-data_fname = output_path + "covs/cov1_njk_%i_binned_%i.fits" % (
-        Njk,
-        binned,
-    )
-if os.path.exists(data_fname):
-    print(f"Reading cov1 from {data_fname}")
-    cov1 = read(data_fname)
-else:
-    cov1 = dices.get_delete1_cov(cls0, cls1)
-    if save:
-        write(data_fname, cov1)
-
-# Shrinkage
-data_fname = output_path + "covs/target_njk_%i_binned_%i.fits" % (
-        Njk,
-        binned,
-    )
-if os.path.exists(data_fname):
-    print(f"Reading target_cov from {data_fname}")
-    target_cov = read(data_fname)
-else:
-    target_cov = dices.get_gaussian_target(cls1)
-    if save:
-        write(data_fname, target_cov)
-
-data_fname = output_path + "covs/shrunk_cov1_njk_%i_binned_%i.fits" % (
-        Njk,
-        binned,
-    )
-if os.path.exists(data_fname):
-    print(f"Reading scov1 from {data_fname}")
-    scov1 = read(data_fname)
-else:
-    W = dices.get_W(cls1)
-    shrinkage = 0.2 #dices.get_shrinkage(cls0, target_cov, W)
-    scov1 = dices.shrink_cov(cls0, cov1, target_cov, shrinkage)
-    if save:
-        write(data_fname, scov1)
+# Delete1
+cov1 = dices.jackknife_covariance(cls1)
+data_fname = output_path + f"covs/jackknife_covariance_njk_{Njk}.fits"
+heracles.write(data_fname, cov1)
+# Shrink
+target_cov = dices.gaussian_covariance(cls0)
+shrinkage = dices.shrinkage_factor(cls1, target_cov)
+shrunk_cov1 = dices.shrink(cov1, target_cov, shrinkage)
+data_fname = output_path + f"covs/target_covariance.fits"
+heracles.write(data_fname, target_cov)
+data_fname = output_path + f"covs/shrunk_jackknife_covariance_njk_{Njk}.fits"
+heracles.write(data_fname, shrunk_cov1)
 
 # Delete2
 cls2 = {}
-for jk in range(1, Njk + 1):
-    for jk2 in range(jk + 1, Njk + 1):
-        data_fname = (
-            output_path
-            + "cls/cls_njk_%i_jkid2_%i_%i.fits" % (Njk, jk, jk2)
-        )
-        if os.path.exists(data_fname) :
-            cls2[(jk, jk2)] = read(data_fname)
-        else:
-            # Compute Cls
-            _cls = dices.get_cls(data_maps, jk_maps, jk=jk, jk2=jk2,)
-            _cls_mm = dices.get_cls(vis_maps, jk_maps, jk=jk, jk2=jk2)
-            # Mask correction
-            _cls = dices.correct_mask(_cls, _cls_mm, mls0)
-            # Bias correction
-            _cls = dices.correct_bias(_cls, jk_maps, jk=jk, jk2=jk2)
-            cls2[(jk, jk2)] = _cls
-            # Save Cls
-            if save:
-                write(data_fname, _cls)
+for regions in combinations(range(1, Njk + 1), 2):
+    (jk1, jk2) = regions
+    data_fname = output_path + f"cls/cls_data_{jk1}_{jk2}.fits"
+    if os.path.exists(data_fname):
+        _cls = read(data_fname)
+    else:
+        # Compute Cls
+        _cls = dices.jackknife.get_cls(data_maps, jk_maps, fields, *regions)
+        _cls_mm = dices.jackknife.get_cls(vis_maps, jk_maps, fields, *regions)
+        # Mask correction
+        alphas = dices.mask_correction(_cls_mm, mls0)
+        _cls = heracles.unmixing._PolSpice(_cls, alphas)
+        # Bias correction
+        _cls = dices.correct_bias(_cls, jk_maps, fields, *regions)
+        # Save spectra
+        data_fname = output_path + f"cls/cls_data_{jk1}_{jk2}.fits"
+        write(data_fname, _cls)
+        data_fname = output_path + f"cls/cls_mask_{jk1}_{jk2}.fits"
+        write(data_fname, _cls_mm)
+    cls2[regions] = _cls
 
-if binned:
-    cls2 = heracles.binned(cls2, ledges)
-
-data_fname = output_path + "covs/cov2_njk_%i_binned_%i.fits" % (
-        Njk,
-        binned,
-    )
-if os.path.exists(data_fname):
-    print(f"Reading cov2 from {data_fname}")
-    cov2 = read(data_fname)
-else:
-    cov2 = dices.get_delete2_cov(
-        cov1,
-        cls0,
-        cls1,
-        cls2,
-    )
-    if save:
-        write(data_fname, cov2)
+# Debias
+cov2 = dices.debias_covariance(
+    cov1,
+    cls0,
+    cls1,
+    cls2,
+)
+data_fname = output_path + f"covs/debiased_jackknife_covariance_njk_{Njk}.fits"
+heracles.write(data_fname, cov2)
 
 # DICES
-fname = output_path + "covs/dices_njk_%i_binned_%i.fits" % (
-    Njk,
-    binned,
+dices_cov = dices.impose_correlation(
+    cov2,
+    shrunk_cov1,
 )
-if os.path.exists(fname):
-    dices_cov = read(fname)
-else:
-    dices_cov = dices.get_dices_cov(
-        cls0,
-        scov1,
-        cov2
-    )
-    if save:
-        write(fname, dices_cov)
+data_fname = output_path + f"covs/DICES_covariance_njk_{Njk}.fits"
+heracles.write(data_fname, cov2)
