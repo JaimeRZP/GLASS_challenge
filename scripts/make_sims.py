@@ -1,5 +1,6 @@
-import healpy as hp
+import yaml
 import os
+import healpy as hp
 import matplotlib.pyplot as plt
 import numpy as np
 import glass
@@ -10,13 +11,21 @@ import heracles
 from cosmology import Cosmology
 
 #Config
-n = 10
-path = "../lognormal_sims"
-mode = "lognormal"
-nside = 1024
-lmax = 1500
+# Config
+config_path = "../dices_config.yaml"
+with open(config_path, 'r') as f:
+    config = yaml.safe_load(f)
+n = config['n_sims']
+nside = config['nside']
+lmax = config['lmax']
+mode = config['mode']  # "lognormal" or "gaussian"
+Njk = config['njk']
+apply_mask = config['apply_mask']
+binned = config['binned']
+
+path = f"../{mode}_sims"
 l = np.arange(0, lmax + 1)
-nbins = 4
+nbins = 2
 h = 0.7
 Oc = 0.25
 Ob = 0.05

@@ -7,10 +7,19 @@ from heracles.fields import Positions, Shears
 from heracles import transform
 from heracles.healpy import HealpixMapper
 
-mode = "lognormal"
-n = 10
-nside = 1024
-lmax = 1500
+
+# Config
+config_path = "../dices_config.yaml"
+with open(config_path, 'r') as f:
+    config = yaml.safe_load(f)
+n = config['n_sims']
+nside = config['nside']
+lmax = config['lmax']
+mode = config['mode']  # "lognormal" or "gaussian"
+Njk = config['njk']
+apply_mask = config['apply_mask']
+binned = config['binned']
+
 mapper = HealpixMapper(nside=nside, lmax=lmax)
 path = f"../{mode}_sims/"
 # Fields

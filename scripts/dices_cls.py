@@ -1,4 +1,5 @@
 import os
+import yaml
 import numpy as np
 import healpy as hp
 import heracles
@@ -12,15 +13,18 @@ from heracles.fields import Positions, Shears, Visibility, Weights
 
 
 # Config
-nside = 1024
-lmax = 1500
-Njk = 10
-mode = "lognormal"  # "lognormal" or "gaussian"
-sims_path = f"../{mode}_sims/{mode}_sim_1/"
-apply_mask = False
-binned = False
+config_path = "../dices_config.yaml"
+with open(config_path, 'r') as f:
+    config = yaml.safe_load(f)
+n = config['n_sims']
+nside = config['nside']
+lmax = config['lmax']
+mode = config['mode']  # "lognormal" or "gaussian"
+Njk = config['njk']
+apply_mask = config['apply_mask']
+binned = config['binned']
 
-save = True
+sims_path = f"../{mode}_sims/{mode}_sim_1/"
 output_path = f"{mode}_dices/"
 if apply_mask:
     output_path = "../masked_"+output_path
@@ -35,7 +39,15 @@ SHE2 = heracles.read_maps(sims_path + "SHE_2.fits")
 
 # Mask
 if apply_mask:
-    vmap = hp.read_map("../data/vmap_rotated.fits")
+    vmap = hp.read_map("../data/vmap.fits")
+    r = hp.Rotator(coord=['G','E'])
+    vmap = r.rotate_map_pixel(vmap)
+    vmap = np.abs(hp.ud_grade(vmap, nside))
+    vmap[vmap <= 1] = 0.0
+    vmap[vmap != 0] = vmap[vmap != 0] / vmap[vmap != 0]
+    vmap[vmap == 0] = 2.0
+    vmap[vmap == 1] = 0.0
+    vmap[vmap == 2] = 1.0
 else:
     vmap = POS1[('POS', 1)] / POS1[('POS', 1)]
 
@@ -63,9 +75,9 @@ if os.path.exists(data_fname):
     jkmap = hp.read_map(data_fname)
 else:
     jkmap = skysegmentor.segmentmapN(vmap, Njk)
-    if save:
-        hp.write_map(data_fname, jkmap)
+    hp.write_map(data_fname, jkmap)
 
+jkmap = np.abs(hp.ud_grade(jkmap, nside))
 for key in list(vis_maps.keys()):
     jk_maps[key] = jkmap
 
@@ -91,9 +103,8 @@ else:
     # For the visibility
     alms = heracles.transform(fields, vis_maps)
     mls0 = heracles.angular_power_spectra(alms)
-    if save:
-        write(data_fname, cls0)
-        write(mask_fname, mls0)
+    write(data_fname, cls0)
+    write(mask_fname, mls0)
 
 # Cls1
 cls1 = {}
@@ -116,30 +127,7 @@ for regions in combinations(range(1, Njk + 1), 1):
         data_fname = output_path + f"cls/cls_mask_{jk1}.fits"
         write(data_fname, _cls_mm)
     cls1[regions] = _cls
-
-# Binning
-nlbins = 15
-ls = np.arange(lmax + 1)
-ledges = np.logspace(np.log10(10), np.log10(lmax), nlbins + 1)
-lgrid = (ledges[1:] + ledges[:-1]) / 2
-
-if binned:
-    ls = lgrid
-    cls0 = heracles.binned(cls0, ledges)
-    cls1 = heracles.binned(cls1, ledges)
-
-# Delete1
-cov1 = dices.jackknife_covariance(cls1)
-data_fname = output_path + f"covs/jackknife_covariance_njk_{Njk}.fits"
-heracles.write(data_fname, cov1)
-# Shrink
-target_cov = dices.gaussian_covariance(cls0)
-shrinkage = dices.shrinkage_factor(cls1, target_cov)
-shrunk_cov1 = dices.shrink(cov1, target_cov, shrinkage)
-data_fname = output_path + f"covs/target_covariance.fits"
-heracles.write(data_fname, target_cov)
-data_fname = output_path + f"covs/shrunk_jackknife_covariance_njk_{Njk}.fits"
-heracles.write(data_fname, shrunk_cov1)
+print("Cls1 done")
 
 # Delete2
 cls2 = {}
@@ -163,21 +151,4 @@ for regions in combinations(range(1, Njk + 1), 2):
         data_fname = output_path + f"cls/cls_mask_{jk1}_{jk2}.fits"
         write(data_fname, _cls_mm)
     cls2[regions] = _cls
-
-# Debias
-cov2 = dices.debias_covariance(
-    cov1,
-    cls0,
-    cls1,
-    cls2,
-)
-data_fname = output_path + f"covs/debiased_jackknife_covariance_njk_{Njk}.fits"
-heracles.write(data_fname, cov2)
-
-# DICES
-dices_cov = dices.impose_correlation(
-    cov2,
-    shrunk_cov1,
-)
-data_fname = output_path + f"covs/DICES_covariance_njk_{Njk}.fits"
-heracles.write(data_fname, cov2)
+print("Cls2 done")
