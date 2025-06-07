@@ -12,20 +12,20 @@ from cosmology import Cosmology
 
 #Config
 # Config
-config_path = "../dices_config.yaml"
+config_path = "./dices_config.yaml"
 with open(config_path, 'r') as f:
     config = yaml.safe_load(f)
-n = config['n_sims']
+n = config['nsims']
 nside = config['nside']
 lmax = config['lmax']
 mode = config['mode']  # "lognormal" or "gaussian"
-Njk = config['njk']
+Njk = config['Njk']
 apply_mask = config['apply_mask']
 binned = config['binned']
 
 path = f"../{mode}_sims"
 l = np.arange(0, lmax + 1)
-nbins = 2
+nbins = 4
 h = 0.7
 Oc = 0.25
 Ob = 0.05

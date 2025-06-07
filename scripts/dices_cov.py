@@ -44,7 +44,7 @@ for regions in combinations(range(1, Njk + 1), 1):
     cls1[regions] = read(data_fname)
 
 # Binning
-nlbins = 15
+nlbins = 10
 ls = np.arange(lmax + 1)
 ledges = np.logspace(np.log10(10), np.log10(lmax), nlbins + 1)
 lgrid = (ledges[1:] + ledges[:-1]) / 2

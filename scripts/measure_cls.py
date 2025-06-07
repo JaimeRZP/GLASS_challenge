@@ -9,14 +9,14 @@ from heracles.healpy import HealpixMapper
 
 
 # Config
-config_path = "../dices_config.yaml"
+config_path = "./dices_config.yaml"
 with open(config_path, 'r') as f:
     config = yaml.safe_load(f)
-n = config['n_sims']
+n = config['nsims']
 nside = config['nside']
 lmax = config['lmax']
 mode = config['mode']  # "lognormal" or "gaussian"
-Njk = config['njk']
+Njk = config['Njk']
 apply_mask = config['apply_mask']
 binned = config['binned']
 

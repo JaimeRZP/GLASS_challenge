@@ -1,7 +1,7 @@
 nside: 256
 lmax: 256
-Njk: 10
-nsims: 10
-mode: "gaussian"
-apply_mask: False
-binned: False
+Njk: 30
+nsims: 100
+mode: "lognormal"
+apply_mask: True
+binned: True
