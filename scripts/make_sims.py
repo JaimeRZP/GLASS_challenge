@@ -10,7 +10,6 @@ import camb.sources
 import heracles
 from cosmology import Cosmology
 
-#Config
 # Config
 config_path = "./dices_config.yaml"
 with open(config_path, 'r') as f:
