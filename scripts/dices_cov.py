@@ -5,6 +5,7 @@ import healpy as hp
 import heracles
 import skysegmentor
 import heracles.dices as dices
+from heracles.fields import Positions, Shears, Visibility, Weights
 from heracles.io import read, write
 from itertools import combinations
 
@@ -75,13 +76,17 @@ else:
     # Compute shrinkage factoray
     target_cov = dices.gaussian_covariance(cls0)
     if binned:
-        shrinkage = dices.shrinkage_factor(cls1, target_cov)
+        shrinkage = 0.01 #dices.shrinkage_factor(cls1, target_cov)
     else:
         shrinkage = 0.2
+    print(f"Shrinkage factor: {shrinkage}")
     shrunk_cov1 = dices.shrink(cov1, target_cov, shrinkage)
     # Save shrunk covariance
     heracles.write(data_fname, shrunk_cov1)
     print(f"Saved shrunk jackknife covariance to {data_fname}")
+    data_fname = output_path + f"covs/target_covariance_binned_{binned}.fits"
+    heracles.write(data_fname, target_cov)
+    print(f"Saved target covariance to {data_fname}")
 
 # Delete2
 cls2 = {}
@@ -99,13 +104,13 @@ if os.path.exists(data_fname):
     print(f"Debiased jackknife covariance already exists at {data_fname}, skipping computation.")
     cov2 = read(data_fname)
 else:
-    cov2 = dices.debias_covariance(
-        cov1,
-        cls0,
-        cls1,
-        cls2,
-    )
+    Q = dices.jackknife.delete2_correction(cls0, cls1, cls2)
+    cov2 = dices.jackknife._debias_covariance(
+        cov1, Q)
     heracles.write(data_fname, cov2)
+    data_fname = output_path + f"covs/debiased_jackknife_covariance_njk_{Njk}_binned_{binned}.fits"
+    data_fname = output_path + f"covs/debias_correction_njk_{Njk}_binned_{binned}.fits"
+    heracles.write(data_fname, Q)
     print(f"Saved debiased jackknife covariance to {data_fname}")
 
 # DICES

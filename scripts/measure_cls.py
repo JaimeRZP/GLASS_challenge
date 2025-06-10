@@ -3,7 +3,7 @@ import numpy as np
 import healpy as hp
 import heracles
 import heracles.dices as dices
-from heracles.fields import Positions, Shears
+from heracles.fields import Positions, Shears, Visibility, Weights
 from heracles import transform
 from heracles.healpy import HealpixMapper
 
@@ -19,14 +19,21 @@ mode = config['mode']  # "lognormal" or "gaussian"
 Njk = config['Njk']
 apply_mask = config['apply_mask']
 binned = config['binned']
-
-mapper = HealpixMapper(nside=nside, lmax=lmax)
 path = f"../{mode}_sims/"
 # Fields
-Nbins = 2
+mapper = HealpixMapper(nside=nside, lmax=lmax)
 fields = {
     "POS": Positions(mapper, mask="VIS"),
     "SHE": Shears(mapper, mask="WHT"),
+    "VIS": Visibility(mapper),
+    "WHT": Weights(mapper),
+}
+mask_mapper = HealpixMapper(nside=2 * nside, lmax=2 * lmax)
+mask_fields = {
+    "POS": Positions(mapper, mask="VIS"),
+    "SHE": Shears(mapper, mask="WHT"),
+    "VIS": Visibility(mapper),
+    "WHT": Weights(mapper),
 }
 
 vmap = hp.read_map("../data/vmap.fits")
@@ -39,12 +46,15 @@ vmap[vmap == 0] = 2.0
 vmap[vmap == 1] = 0.0
 vmap[vmap == 2] = 1.0
 
-nlbins = 10
-ls = np.arange(lmax + 1)
-ledges = np.logspace(np.log10(10), np.log10(lmax), nlbins + 1)
-lgrid = (ledges[1:] + ledges[:-1]) / 2
-
 # mask cls
+vmaps = {}
+vmaps[("VIS", 1)] = vmap
+vmaps[("VIS", 2)] = vmap
+vmaps[("WHT", 1)] = vmap
+vmaps[("WHT", 2)] = vmap
+mask_alms = heracles.transform(mask_fields, vmaps)
+mask_cls = heracles.angular_power_spectra(mask_alms)
+
 for i in range(1, n+1):
     print(f"Loading sim {i}", end='\r')
     data_maps = {}
@@ -73,4 +83,5 @@ for i in range(1, n+1):
     alms = transform(fields, data_maps)
     cls_wmask = heracles.angular_power_spectra(alms)
     heracles.write(path+mode+f"_sim_{i}/measured_cls_wmask.fits", cls_wmask)
+    heracles.write(path+mode+f"_sim_{i}/mask_cls.fits", mask_cls)
 print("Done")
