@@ -10,16 +10,13 @@ from heracles.io import read, write
 
 
 # Config
-config_path = "./dices_config.yaml"
+config_path = "./sims_config.yaml"
 with open(config_path, 'r') as f:
     config = yaml.safe_load(f)
 n = config['nsims']
 nside = config['nside']
 lmax = config['lmax']
 mode = config['mode']  # "lognormal" or "gaussian"
-Njk = config['Njk']
-apply_mask = config['apply_mask']
-binned = config['binned']
 path = f"../{mode}_sims"
 
 mapper = HealpixMapper(nside=nside, lmax=lmax)
@@ -30,13 +27,12 @@ fields = {
     "WHT": Weights(mapper),
 }
 
-n = 100
 for i in range(1, n+1):
     folname = f"{mode}_sim_{i}"
     print(f"Unmixing sim {i} in {folname}", end='\r')
     # Load cls
-    data_cls = heracles.read(f"{path}/{folname}/measured_cls_wmask.fits")
-    mask_cls = heracles.read(f"{path}/{folname}/mask_cls.fits")
+    data_cls = heracles.read(f"{path}/{folname}/cls_data_wmask.fits")
+    mask_cls = heracles.read(f"{path}/{folname}/cls_mask.fits")
     theory_cls = heracles.read(f"{path}/{folname}/theory_cls.fits")
     # Format theory cls
     # Bit hardcoded for now, but could be generalized
@@ -89,5 +85,5 @@ for i in range(1, n+1):
 
     # Save cls
     output_path = f"{path}/{folname}/"
-    heracles.write(output_path + "f_cls.fits", f_cls)
-    heracles.write(output_path + "i_cls.fits", i_cls)
+    heracles.write(output_path + "theroy_cls_f.fits", f_cls)
+    heracles.write(output_path + "cls_data_i.fits", i_cls)

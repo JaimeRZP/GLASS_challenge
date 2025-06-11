@@ -39,15 +39,8 @@ SHE2 = heracles.read_maps(sims_path + "SHE_2.fits")
 
 # Mask
 if apply_mask:
-    vmap = hp.read_map("../data/vmap.fits")
-    r = hp.Rotator(coord=['G','E'])
-    vmap = r.rotate_map_pixel(vmap)
-    vmap = np.abs(hp.ud_grade(vmap, nside))
-    vmap[vmap <= 1] = 0.0
-    vmap[vmap != 0] = vmap[vmap != 0] / vmap[vmap != 0]
-    vmap[vmap == 0] = 2.0
-    vmap[vmap == 1] = 0.0
-    vmap[vmap == 2] = 1.0
+    vmap = hp.read_map("../data/vmap.fits.gz")
+    vmap = nhp.ud_grade(vmap, nside)
 else:
     vmap = POS1[('POS', 1)] / POS1[('POS', 1)]
 
@@ -91,20 +84,12 @@ fields = {
 }
 
 # Cls0
+cls0 = heracles.read(sims_path + "cls_data.fits")
+mls0 = heracles.read(sims_path + "cls_mask.fits")
 data_fname = output_path + "cls/cls_data_0.fits"
 mask_fname = output_path + "cls/cls_mask_0.fits"
-if os.path.exists(data_fname) & os.path.exists(mask_fname):
-    cls0 = read(data_fname)
-    mls0 = read(mask_fname)
-else:
-    # For the data
-    alms = heracles.transform(fields, data_maps)
-    cls0 = heracles.angular_power_spectra(alms)
-    # For the visibility
-    alms = heracles.transform(fields, vis_maps)
-    mls0 = heracles.angular_power_spectra(alms)
-    write(data_fname, cls0)
-    write(mask_fname, mls0)
+write(data_fname, cls0)
+write(mask_fname, mls0)
 
 # Cls1
 cls1 = {}

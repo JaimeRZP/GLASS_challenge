@@ -9,16 +9,13 @@ from heracles.healpy import HealpixMapper
 
 
 # Config
-config_path = "./dices_config.yaml"
+config_path = "./sims_config.yaml"
 with open(config_path, 'r') as f:
     config = yaml.safe_load(f)
 n = config['nsims']
 nside = config['nside']
 lmax = config['lmax']
 mode = config['mode']  # "lognormal" or "gaussian"
-Njk = config['Njk']
-apply_mask = config['apply_mask']
-binned = config['binned']
 path = f"../{mode}_sims/"
 # Fields
 mapper = HealpixMapper(nside=nside, lmax=lmax)
@@ -36,15 +33,9 @@ mask_fields = {
     "WHT": Weights(mapper),
 }
 
-vmap = hp.read_map("../data/vmap.fits")
-r = hp.Rotator(coord=['G','E']) 
-vmap = r.rotate_map_pixel(vmap)
-vmap = np.abs(hp.ud_grade(vmap, nside))
-vmap[vmap <= 1] = 0.0
-vmap[vmap != 0] = vmap[vmap != 0] / vmap[vmap != 0]
-vmap[vmap == 0] = 2.0
-vmap[vmap == 1] = 0.0
-vmap[vmap == 2] = 1.0
+# vamp
+vmap = hp.read_map("../data/vmap.fits.gz")
+vmap = hp.ud_grade(vmap, nside)
 
 # mask cls
 vmaps = {}
@@ -72,7 +63,7 @@ for i in range(1, n+1):
 
     alms = transform(fields, data_maps)
     cls = heracles.angular_power_spectra(alms)
-    heracles.write(path+mode+f"_sim_{i}/measured_cls.fits", cls)
+    heracles.write(path+mode+f"_sim_{i}/cls_data.fits", cls)
 
     # Masked
     data_maps[("POS", 1)] *= vmap
@@ -82,6 +73,6 @@ for i in range(1, n+1):
 
     alms = transform(fields, data_maps)
     cls_wmask = heracles.angular_power_spectra(alms)
-    heracles.write(path+mode+f"_sim_{i}/measured_cls_wmask.fits", cls_wmask)
-    heracles.write(path+mode+f"_sim_{i}/mask_cls.fits", mask_cls)
+    heracles.write(path+mode+f"_sim_{i}/cls_data_wmask.fits", cls_wmask)
+    heracles.write(path+mode+f"_sim_{i}/cls_mask.fits", mask_cls)
 print("Done")

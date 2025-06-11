@@ -11,16 +11,13 @@ import heracles
 from cosmology import Cosmology
 
 # Config
-config_path = "./dices_config.yaml"
+config_path = "./sims_config.yaml"
 with open(config_path, 'r') as f:
     config = yaml.safe_load(f)
 n = config['nsims']
 nside = config['nside']
 lmax = config['lmax']
 mode = config['mode']  # "lognormal" or "gaussian"
-Njk = config['Njk']
-apply_mask = config['apply_mask']
-binned = config['binned']
 
 path = f"../{mode}_sims"
 l = np.arange(0, lmax + 1)
@@ -28,16 +25,6 @@ nbins = 4
 h = 0.7
 Oc = 0.25
 Ob = 0.05
-
-print("Config:")
-print(f"path: {path}")
-print(f"mode: {mode}")
-print(f"nside: {nside}")
-print(f"lmax: {lmax}")
-print(f"nbins: {nbins}")
-print(f"h: {h}")
-print(f"Oc: {Oc}")
-print(f"Ob: {Ob}")
 
 # make nz's
 z = np.arange(0.0, 5.01, 0.01)
